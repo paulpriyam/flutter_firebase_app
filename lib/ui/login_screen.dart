@@ -1,5 +1,10 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_firebase/ui/post_screen.dart';
 import 'package:flutter_firebase/ui/sign_up.dart';
+import 'package:flutter_firebase/utils/utils.dart';
+import 'package:flutter_firebase/widgets/custom_button.dart';
+import 'package:flutter_firebase/widgets/custom_text_field.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -12,6 +17,8 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   var emailController = TextEditingController();
   var passwordController = TextEditingController();
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  bool isLoading = false;
   @override
   void dispose() {
     emailController.dispose();
@@ -70,30 +77,45 @@ class _LoginScreenState extends State<LoginScreen> {
             const SizedBox(
               height: 16,
             ),
-            InkWell(
-              onTap: () {
-                if (_formKey.currentState!.validate()) {}
-              },
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                height: 50,
-                width: 100,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8),
-                    gradient: LinearGradient(
-                        colors: [Colors.blue, Colors.blue.shade200])),
-                child: const Text(
-                  "Login",
-                  style: TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.bold),
-                ),
-              ),
-            ),
+            CustomButtonTxt(
+                isLoading: isLoading,
+                buttonText: "Login",
+                onTap: () {
+                  setState(() {
+                    isLoading = true;
+                  });
+                  if (_formKey.currentState!.validate()) {
+                    _auth
+                        .signInWithEmailAndPassword(
+                            email: emailController.text.toString(),
+                            password: passwordController.text.toString())
+                        .then((value) {
+                      setState(() {
+                        isLoading = false;
+                        Utility().showToastMessage(
+                            "${value.user!.email}successfully logged in",
+                            false);
+                      });
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => PostScreen()));
+                    }).onError((error, stackTrace) {
+                      setState(() {
+                        isLoading = false;
+                        Utility().showToastMessage(error.toString(), true);
+                      });
+                    });
+                  } else {
+                    setState(() {
+                      isLoading = false;
+                    });
+                  }
+                }),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text("Dont't have an account"),
+                const Text("Dont't have an account?"),
                 TextButton(
                     onPressed: () {
                       Navigator.push(
@@ -106,42 +128,6 @@ class _LoginScreenState extends State<LoginScreen> {
             )
           ],
         ),
-      ),
-    );
-  }
-}
-
-class CustomTextField extends StatelessWidget {
-  CustomTextField(
-      {super.key,
-      required this.myController,
-      required this.labelText,
-      required this.hintText,
-      required this.isPassword,
-      required this.validate});
-
-  final TextEditingController myController;
-  final String labelText;
-  final String hintText;
-  final bool isPassword;
-  String? Function(String?) validate;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: TextFormField(
-        validator: validate,
-        obscureText: isPassword ? true : false,
-        controller: myController,
-        decoration: InputDecoration(
-            prefixIcon: isPassword
-                ? const Icon(Icons.password)
-                : const Icon(Icons.email),
-            hintText: hintText,
-            hintStyle: const TextStyle(color: Colors.grey),
-            labelText: labelText,
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(4))),
       ),
     );
   }
