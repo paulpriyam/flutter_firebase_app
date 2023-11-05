@@ -11,7 +11,17 @@ class _PostScreenState extends State<PostScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(centerTitle: true,title: const Text("Post"),automaticallyImplyLeading: false,),
+      appBar: AppBar(
+        centerTitle: true,
+        title: const Text("Post"),
+        actions: const [
+          Icon(Icons.logout),
+          SizedBox(
+            width: 16,
+          )
+        ],
+        automaticallyImplyLeading: false,
+      ),
     );
   }
 }
